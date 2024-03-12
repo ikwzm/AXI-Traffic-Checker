@@ -2,7 +2,7 @@
 --!     @file    axi_traffic_checker.vhd
 --!     @brief   AXI Traffic Checker Module
 --!     @version 0.1.0
---!     @date    2024/3/7
+--!     @date    2024/3/12
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -44,6 +44,7 @@ entity  AXI_TRAFFIC_CHECKER is
     -- 
     -------------------------------------------------------------------------------
     generic (
+        BUILD_VERSION   : integer range 1 to  255 :=  1;
         C_ADDR_WIDTH    : integer range 1 to   64 := 32;
         C_DATA_WIDTH    : integer range 8 to 1024 := 32;
         C_ID_WIDTH      : integer                 :=  8;
@@ -237,7 +238,7 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -- Addr=0x00 |                                                               |
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    -- Addr=0x04 | MAJOR | MINOR |  DATA_WIDTH   |  MW_XFER_SIZE |  MR_XFER_SIZE |
+    -- Addr=0x04 | MAJOR | MINOR | BUILD_VERSION |       |  DW   | W_XSZ | R_XSZ |
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -------------------------------------------------------------------------------
     constant  VERSION_REGS_ADDR     :  integer := 16#00#;
@@ -249,9 +250,11 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  VERSION_REGS_DATA     :  std_logic_vector(VERSION_REGS_BITS-1 downto 0)
                                     := std_logic_vector(to_unsigned(VERSION_MAJOR          , 4)) &
                                        std_logic_vector(to_unsigned(VERSION_MINOR          , 4)) &
-                                       std_logic_vector(to_unsigned(CALC_BITS(M_DATA_WIDTH), 8)) &
-                                       std_logic_vector(to_unsigned(MW_MAX_XFER_SIZE       , 8)) &
-                                       std_logic_vector(to_unsigned(MR_MAX_XFER_SIZE       , 8)) &
+                                       std_logic_vector(to_unsigned(BUILD_VERSION          , 8)) &
+                                       std_logic_vector(to_unsigned(0                      , 4)) &
+                                       std_logic_vector(to_unsigned(CALC_BITS(M_DATA_WIDTH), 4)) &
+                                       std_logic_vector(to_unsigned(MW_MAX_XFER_SIZE       , 4)) &
+                                       std_logic_vector(to_unsigned(MR_MAX_XFER_SIZE       , 4)) &
                                        std_logic_vector(to_unsigned(0                      ,32));
     -------------------------------------------------------------------------------
     -- Reserved Register(1)
@@ -459,6 +462,17 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  MW_CTRL_LAST_POS      :  integer := 8*MW_CTRL_REGS_ADDR +  0;
     -------------------------------------------------------------------------------
     -- Reserved Register(2)
+    -------------------------------------------------------------------------------
+    --           31            24              16               8               0
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x30 |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x34 |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x38 |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x3C |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -------------------------------------------------------------------------------
     constant  RESERVED_REGS2_ADDR   :  integer := 16#30#;
     constant  RESERVED_REGS2_BITS   :  integer := 128;

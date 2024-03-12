@@ -175,7 +175,7 @@ entity  AXI_TRAFFIC_CHECKER is
         M_RVALID        : in    std_logic;
         M_RREADY        : out   std_logic;
     -------------------------------------------------------------------------------
-    -- Interrupt Request Signals.
+    -- Interrupt Request Signal.
     -------------------------------------------------------------------------------
         IRQ             : out   std_logic
     );
@@ -195,6 +195,18 @@ use     PIPEWORK.COMPONENTS.REGISTER_ACCESS_ADAPTER;
 use     PIPEWORK.PUMP_COMPONENTS.PUMP_CONTROLLER_OUTLET_SIDE;
 use     PIPEWORK.PUMP_COMPONENTS.PUMP_CONTROLLER_INTAKE_SIDE;
 architecture RTL of AXI_TRAFFIC_CHECKER is
+    -------------------------------------------------------------------------------
+    --
+    -------------------------------------------------------------------------------
+    function  CALC_BITS(N:integer) return integer is
+        variable bits : integer;
+    begin
+        bits := 1;
+        while (2**bits < N) loop
+            bits := bits + 1;
+        end loop;
+        return bits;
+    end function;
     -------------------------------------------------------------------------------
     -- Reset Signals.
     -------------------------------------------------------------------------------
@@ -221,6 +233,13 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     -------------------------------------------------------------------------------
     -- Version Register
     -------------------------------------------------------------------------------
+    --           31            24              16               8               0
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x00 |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x04 | MAJOR | MINOR |  DATA_WIDTH   |  MW_XFER_SIZE |  MR_XFER_SIZE |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -------------------------------------------------------------------------------
     constant  VERSION_REGS_ADDR     :  integer := 16#00#;
     constant  VERSION_REGS_BITS     :  integer := 64;
     constant  VERSION_REGS_LO       :  integer := 8*VERSION_REGS_ADDR;
@@ -228,19 +247,28 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  VERSION_MAJOR         :  integer range 0 to 15 := 0;
     constant  VERSION_MINOR         :  integer range 0 to 15 := 1;
     constant  VERSION_REGS_DATA     :  std_logic_vector(VERSION_REGS_BITS-1 downto 0)
-                                    := std_logic_vector(to_unsigned(VERSION_MAJOR   , 4)) &
-                                       std_logic_vector(to_unsigned(VERSION_MINOR   , 4)) &
-                                       std_logic_vector(to_unsigned(M_DATA_WIDTH/8  , 8)) &
-                                       std_logic_vector(to_unsigned(MW_MAX_XFER_SIZE, 8)) &
-                                       std_logic_vector(to_unsigned(MR_MAX_XFER_SIZE, 8)) &
-                                       std_logic_vector(to_unsigned(0               ,32));
+                                    := std_logic_vector(to_unsigned(VERSION_MAJOR          , 4)) &
+                                       std_logic_vector(to_unsigned(VERSION_MINOR          , 4)) &
+                                       std_logic_vector(to_unsigned(CALC_BITS(M_DATA_WIDTH), 8)) &
+                                       std_logic_vector(to_unsigned(MW_MAX_XFER_SIZE       , 8)) &
+                                       std_logic_vector(to_unsigned(MR_MAX_XFER_SIZE       , 8)) &
+                                       std_logic_vector(to_unsigned(0                      ,32));
     -------------------------------------------------------------------------------
-    -- Reserved Register
+    -- Reserved Register(1)
     -------------------------------------------------------------------------------
-    constant  RESERVED_REGS_ADDR    :  integer := 16#08#;
-    constant  RESERVED_REGS_BITS    :  integer := 64;
-    constant  RESERVED_REGS_LO      :  integer := 8*RESERVED_REGS_ADDR;
-    constant  RESERVED_REGS_HI      :  integer := 8*RESERVED_REGS_ADDR + RESERVED_REGS_BITS- 1;
+    --           31            24              16               8               0
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x08 |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x0C |                                                               |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -------------------------------------------------------------------------------
+    constant  RESERVED_REGS1_ADDR   :  integer := 16#08#;
+    constant  RESERVED_REGS1_BITS   :  integer := 64;
+    constant  RESERVED_REGS1_LO     :  integer := 8*RESERVED_REGS1_ADDR;
+    constant  RESERVED_REGS1_HI     :  integer := 8*RESERVED_REGS1_ADDR + RESERVED_REGS1_BITS- 1;
+    constant  RESERVED_REGS1_DATA   :  std_logic_vector(RESERVED_REGS1_BITS-1 downto 0)
+                                    := (others => '0');
     -------------------------------------------------------------------------------
     -- Master Read Registers
     -------------------------------------------------------------------------------
@@ -429,6 +457,15 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  MW_CTRL_DONE_POS      :  integer := 8*MW_CTRL_REGS_ADDR +  2;
     constant  MW_CTRL_FIRST_POS     :  integer := 8*MW_CTRL_REGS_ADDR +  1;
     constant  MW_CTRL_LAST_POS      :  integer := 8*MW_CTRL_REGS_ADDR +  0;
+    -------------------------------------------------------------------------------
+    -- Reserved Register(2)
+    -------------------------------------------------------------------------------
+    constant  RESERVED_REGS2_ADDR   :  integer := 16#30#;
+    constant  RESERVED_REGS2_BITS   :  integer := 128;
+    constant  RESERVED_REGS2_LO     :  integer := 8*RESERVED_REGS2_ADDR;
+    constant  RESERVED_REGS2_HI     :  integer := 8*RESERVED_REGS2_ADDR + RESERVED_REGS2_BITS- 1;
+    constant  RESERVED_REGS2_DATA   :  std_logic_vector(RESERVED_REGS2_BITS-1 downto 0)
+                                    := (others => '0');
 begin
     -------------------------------------------------------------------------------
     -- 
@@ -558,7 +595,13 @@ begin
                 O_WLOAD         => regs_load         , -- Out :
                 O_RDATA         => regs_rbit           -- In  :
             );                                         -- 
-    end block;                                         -- 
+        ---------------------------------------------------------------------------
+        -- 
+        ---------------------------------------------------------------------------
+        regs_rbit(VERSION_REGS_HI   downto VERSION_REGS_LO  ) <= VERSION_REGS_DATA;
+        regs_rbit(RESERVED_REGS1_HI downto RESERVED_REGS1_LO) <= RESERVED_REGS1_DATA;
+        regs_rbit(RESERVED_REGS2_HI downto RESERVED_REGS2_LO) <= RESERVED_REGS2_DATA;
+    end block;
     -------------------------------------------------------------------------------
     -- Master Write Block
     -------------------------------------------------------------------------------
@@ -746,7 +789,7 @@ begin
                 BUF_REN(0)          => buf_ren           , -- Out :
                 BUF_DATA            => buf_rdata         , -- In  :
                 BUF_PTR             => buf_rptr            -- Out :
-            );
+            );                                             --
         ---------------------------------------------------------------------------
         -- Master Write Controller
         ---------------------------------------------------------------------------
@@ -881,12 +924,61 @@ begin
                 TRAN_NONE           => open              , -- Out :
                 TRAN_ERROR          => open                -- Out :
             );
-        regs_rbit(MW_CTRL_RESV_POS) <= '0';
+        ---------------------------------------------------------------------------
+        -- request transaction mode
+        ---------------------------------------------------------------------------
+        M_AWUSER        <= (others => '0');
         req_speculative <= regs_rbit(MW_MODE_SPECUL_POS);
         req_safety      <= regs_rbit(MW_MODE_SAFETY_POS);
         req_prot        <= regs_rbit(MW_MODE_PROT_HI  downto MW_MODE_PROT_LO );
         req_cache       <= regs_rbit(MW_MODE_CACHE_HI downto MW_MODE_CACHE_LO);
-        buf_rdata       <= (others => '0');
+        ---------------------------------------------------------------------------
+        -- regs_rbit
+        ---------------------------------------------------------------------------
+        regs_rbit(MW_CTRL_RESV_POS) <= '0';
+        ---------------------------------------------------------------------------
+        -- buf_rdata
+        ---------------------------------------------------------------------------
+        DATA: block
+            constant  WORD_BYTES  :  integer := WORD_BITS/8;
+            constant  WORDS       :  integer := BUF_WIDTH/WORD_BITS;
+            constant  WORD_LO     :  std_logic_vector(CALC_BITS(BUF_WIDTH/8)-1 downto 0)
+                                  := (others => '0');
+            constant  WORD_HI     :  std_logic_vector(WORD_BITS-1 downto WORD_LO'high+1)
+                                  := (others => '0');
+            signal    curr_word   :  unsigned(WORD_BITS-1 downto 0);
+        begin
+            process (ACLK, RST)
+                variable next_word :  unsigned(WORD_BITS-1 downto 0);
+                variable word_data :  unsigned(WORD_BITS-1 downto 0);
+            begin
+                if (RST = '1') then
+                        curr_word <= (others => '0');
+                        buf_rdata <= (others => '0');
+                elsif (ACLK'event and ACLK = '1') then
+                    if (CLR = '1') then
+                        curr_word <= (others => '0');
+                        buf_rdata <= (others => '0');
+                    else
+                        if (pull_buf_valid = '1') then
+                            next_word := curr_word + unsigned(pull_buf_size);
+                        else
+                            next_word := curr_word;
+                        end if;
+                        if (valve_open = '1') then
+                            curr_word <= next_word;
+                        else
+                            curr_word <= (others => '0');
+                        end if;
+                        for i in 0 to WORDS-1 loop
+                            word_data(WORD_LO'range) := to_unsigned(i*WORD_BYTES,WORD_LO'length);
+                            word_data(WORD_HI'range) := next_word(WORD_HI'range);
+                            buf_rdata((i+1)*WORD_BITS-1 downto i*WORD_BITS) <= std_logic_vector(word_data);
+                        end loop;
+                    end if;
+                end if;
+            end process;
+        end block;
     end block;
     -------------------------------------------------------------------------------
     -- Master Read Block
@@ -1204,14 +1296,21 @@ begin
                 TRAN_NONE           => open              , -- Out :
                 TRAN_ERROR          => open                -- Out :
         );
-        regs_rbit(MR_CTRL_RESV_POS) <= '0';
+        ---------------------------------------------------------------------------
+        -- request transaction mode
+        ---------------------------------------------------------------------------
+        M_ARUSER        <= (others => '0');
         req_speculative <= regs_rbit(MR_MODE_SPECUL_POS);
         req_safety      <= regs_rbit(MR_MODE_SAFETY_POS);
         req_prot        <= regs_rbit(MR_MODE_PROT_HI  downto MR_MODE_PROT_LO );
         req_cache       <= regs_rbit(MR_MODE_CACHE_HI downto MR_MODE_CACHE_LO);
+        ---------------------------------------------------------------------------
+        -- regs_rbit
+        ---------------------------------------------------------------------------
+        regs_rbit(MR_CTRL_RESV_POS) <= '0';
     end block;
     -------------------------------------------------------------------------------
-    -- 
+    -- Interrupt Request Signal
     -------------------------------------------------------------------------------
     process (ACLK, RST) begin
         if (RST = '1') then

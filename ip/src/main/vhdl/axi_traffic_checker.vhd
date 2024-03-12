@@ -45,7 +45,7 @@ entity  AXI_TRAFFIC_CHECKER is
     -------------------------------------------------------------------------------
     generic (
         BUILD_VERSION   : integer range 1 to  255 :=  1;
-        C_ADDR_WIDTH    : integer range 1 to   64 := 32;
+        C_ADDR_WIDTH    : integer range 1 to   64 := 12;
         C_DATA_WIDTH    : integer range 8 to 1024 := 32;
         C_ID_WIDTH      : integer                 :=  8;
         M_AXI_ID        : integer                 :=  1;

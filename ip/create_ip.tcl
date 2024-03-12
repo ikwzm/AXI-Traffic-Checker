@@ -6,7 +6,7 @@ set ip_name                 "ZYNQMP_AXI_TRAFFIC_CHECKER"
 set ip_version              "0.1"
 set ip_core_revision        1
 set ip_vendor_name          "ikwzm"
-set ip_library_name         "ZYNQMP_AXI_TRAFFIC_CHECKER"
+set ip_library_name         "PIPEWORK"
 
 set ip_root_directory       [file join [file dirname [info script]] "zynqmp_axi_traffic_checker_$ip_version"]
 set project_directory       [file join [file dirname [info script]] "work"]

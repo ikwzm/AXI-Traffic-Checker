@@ -1,14 +1,14 @@
 #
 # create_ip.tcl  Tcl script for create project and generate IP
 #
-set project_name            "zynqmp_axi_traffic_checker"
-set ip_name                 "ZYNQMP_AXI_TRAFFIC_CHECKER"
-set ip_version              "0.1"
+set project_name            "axi_traffic_checker"
+set ip_name                 "AXI_TRAFFIC_CHECKER"
+set ip_version              "0.2"
 set ip_core_revision        1
 set ip_vendor_name          "ikwzm"
 set ip_library_name         "PIPEWORK"
 
-set ip_root_directory       [file join [file dirname [info script]] "zynqmp_axi_traffic_checker_$ip_version"]
+set ip_root_directory       [file join [file dirname [info script]] "axi_traffic_checker_$ip_version"]
 set project_directory       [file join [file dirname [info script]] "work"]
 set device_parts            "xc7z010clg400-1"
 #
@@ -90,11 +90,11 @@ set_property supported_families {zynq Production virtex7 Production qvirtex7 Pro
 #
 # Set Core Version
 #
-set_property version       "$ip_version"                 [ipx::current_core]
-set_property core_revision "$ip_core_revision"           [ipx::current_core]
-set_property name          "$ip_name"                    [ipx::current_core]
-set_property display_name  "$ip_name"                    [ipx::current_core]
-set_property description   "ZynqMP-AXI Traffic Checker"  [ipx::current_core]
+set_property version       "$ip_version"          [ipx::current_core]
+set_property core_revision "$ip_core_revision"    [ipx::current_core]
+set_property name          "$ip_name"             [ipx::current_core]
+set_property display_name  "$ip_name"             [ipx::current_core]
+set_property description   "AXI Traffic Checker"  [ipx::current_core]
 #
 # Associate Clock
 #

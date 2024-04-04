@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_traffic_checker.vhd
 --!     @brief   AXI Traffic Checker Module
---!     @version 0.1.0
---!     @date    2024/3/12
+--!     @version 0.2.0
+--!     @date    2024/4/4
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -238,7 +238,7 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -- Addr=0x00 |                                                               |
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    -- Addr=0x04 | MAJOR | MINOR | BUILD_VERSION |       |  DW   | W_XSZ | R_XSZ |
+    -- Addr=0x04 | MAJOR | MINOR | BUILD_VERSION |                       |  DW   | 
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -------------------------------------------------------------------------------
     constant  VERSION_REGS_ADDR     :  integer := 16#00#;
@@ -246,32 +246,54 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  VERSION_REGS_LO       :  integer := 8*VERSION_REGS_ADDR;
     constant  VERSION_REGS_HI       :  integer := 8*VERSION_REGS_ADDR + VERSION_REGS_BITS- 1;
     constant  VERSION_MAJOR         :  integer range 0 to 15 := 0;
-    constant  VERSION_MINOR         :  integer range 0 to 15 := 1;
+    constant  VERSION_MINOR         :  integer range 0 to 15 := 2;
     constant  VERSION_REGS_DATA     :  std_logic_vector(VERSION_REGS_BITS-1 downto 0)
                                     := std_logic_vector(to_unsigned(VERSION_MAJOR          , 4)) &
                                        std_logic_vector(to_unsigned(VERSION_MINOR          , 4)) &
                                        std_logic_vector(to_unsigned(BUILD_VERSION          , 8)) &
-                                       std_logic_vector(to_unsigned(0                      , 4)) &
+                                       std_logic_vector(to_unsigned(0                      ,12)) &
                                        std_logic_vector(to_unsigned(CALC_BITS(M_DATA_WIDTH), 4)) &
-                                       std_logic_vector(to_unsigned(MW_MAX_XFER_SIZE       , 4)) &
-                                       std_logic_vector(to_unsigned(MR_MAX_XFER_SIZE       , 4)) &
                                        std_logic_vector(to_unsigned(0                      ,32));
     -------------------------------------------------------------------------------
-    -- Reserved Register(1)
+    -- Master Read Parameter Register
     -------------------------------------------------------------------------------
     --           31            24              16               8               0
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    -- Addr=0x08 |                                                               |
-    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    -- Addr=0x0C |                                                               |
+    -- Addr=0x08 |                               | P | D | A |   | QUEUE | XSIZE |
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -------------------------------------------------------------------------------
-    constant  RESERVED_REGS1_ADDR   :  integer := 16#08#;
-    constant  RESERVED_REGS1_BITS   :  integer := 64;
-    constant  RESERVED_REGS1_LO     :  integer := 8*RESERVED_REGS1_ADDR;
-    constant  RESERVED_REGS1_HI     :  integer := 8*RESERVED_REGS1_ADDR + RESERVED_REGS1_BITS- 1;
-    constant  RESERVED_REGS1_DATA   :  std_logic_vector(RESERVED_REGS1_BITS-1 downto 0)
-                                    := (others => '0');
+    constant  MR_PARAM_REGS_ADDR    :  integer := 16#08#;
+    constant  MR_PARAM_REGS_BITS    :  integer := 32;
+    constant  MR_PARAM_REGS_LO      :  integer := 8*MR_PARAM_REGS_ADDR;
+    constant  MR_PARAM_REGS_HI      :  integer := 8*MR_PARAM_REGS_ADDR + MR_PARAM_REGS_BITS- 1;
+    constant  MR_PARAM_REGS_DATA    :  std_logic_vector(MR_PARAM_REGS_BITS-1 downto 0)
+                                    := std_logic_vector(to_unsigned(0               ,16)) &
+                                       std_logic_vector(to_unsigned(MR_DATA_PIPELINE, 2)) &
+                                       std_logic_vector(to_unsigned(MR_DATA_REGS    , 2)) &
+                                       std_logic_vector(to_unsigned(MR_ACK_REGS     , 2)) &
+                                       std_logic_vector(to_unsigned(0               , 2)) &
+                                       std_logic_vector(to_unsigned(MR_QUEUE_SIZE   , 4)) &
+                                       std_logic_vector(to_unsigned(MR_MAX_XFER_SIZE, 4));
+    -------------------------------------------------------------------------------
+    -- Master Write Parameter Register
+    -------------------------------------------------------------------------------
+    --           31            24              16               8               0
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -- Addr=0x0C |                               | P | D | A | R | QUEUE | XSIZE |
+    --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    -------------------------------------------------------------------------------
+    constant  MW_PARAM_REGS_ADDR    :  integer := 16#0C#;
+    constant  MW_PARAM_REGS_BITS    :  integer := 32;
+    constant  MW_PARAM_REGS_LO      :  integer := 8*MW_PARAM_REGS_ADDR;
+    constant  MW_PARAM_REGS_HI      :  integer := 8*MW_PARAM_REGS_ADDR + MW_PARAM_REGS_BITS- 1;
+    constant  MW_PARAM_REGS_DATA    :  std_logic_vector(MW_PARAM_REGS_BITS-1 downto 0)
+                                    := std_logic_vector(to_unsigned(0               ,16)) &
+                                       std_logic_vector(to_unsigned(MW_DATA_PIPELINE, 2)) &
+                                       std_logic_vector(to_unsigned(MW_RESP_REGS    , 2)) &
+                                       std_logic_vector(to_unsigned(MW_ACK_REGS     , 2)) &
+                                       std_logic_vector(to_unsigned(MW_REQ_REGS     , 2)) &
+                                       std_logic_vector(to_unsigned(MW_QUEUE_SIZE   , 4)) &
+                                       std_logic_vector(to_unsigned(MW_MAX_XFER_SIZE, 4));
     -------------------------------------------------------------------------------
     -- Master Read Registers
     -------------------------------------------------------------------------------
@@ -461,7 +483,7 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  MW_CTRL_FIRST_POS     :  integer := 8*MW_CTRL_REGS_ADDR +  1;
     constant  MW_CTRL_LAST_POS      :  integer := 8*MW_CTRL_REGS_ADDR +  0;
     -------------------------------------------------------------------------------
-    -- Reserved Register(2)
+    -- Reserved Register
     -------------------------------------------------------------------------------
     --           31            24              16               8               0
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -474,11 +496,11 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     -- Addr=0x3C |                                                               |
     --           +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     -------------------------------------------------------------------------------
-    constant  RESERVED_REGS2_ADDR   :  integer := 16#30#;
-    constant  RESERVED_REGS2_BITS   :  integer := 128;
-    constant  RESERVED_REGS2_LO     :  integer := 8*RESERVED_REGS2_ADDR;
-    constant  RESERVED_REGS2_HI     :  integer := 8*RESERVED_REGS2_ADDR + RESERVED_REGS2_BITS- 1;
-    constant  RESERVED_REGS2_DATA   :  std_logic_vector(RESERVED_REGS2_BITS-1 downto 0)
+    constant  RESERVED_REGS_ADDR    :  integer := 16#30#;
+    constant  RESERVED_REGS_BITS    :  integer := 128;
+    constant  RESERVED_REGS_LO      :  integer := 8*RESERVED_REGS_ADDR;
+    constant  RESERVED_REGS_HI      :  integer := 8*RESERVED_REGS_ADDR + RESERVED_REGS_BITS- 1;
+    constant  RESERVED_REGS_DATA    :  std_logic_vector(RESERVED_REGS_BITS-1 downto 0)
                                     := (others => '0');
 begin
     -------------------------------------------------------------------------------
@@ -613,8 +635,9 @@ begin
         -- 
         ---------------------------------------------------------------------------
         regs_rbit(VERSION_REGS_HI   downto VERSION_REGS_LO  ) <= VERSION_REGS_DATA;
-        regs_rbit(RESERVED_REGS1_HI downto RESERVED_REGS1_LO) <= RESERVED_REGS1_DATA;
-        regs_rbit(RESERVED_REGS2_HI downto RESERVED_REGS2_LO) <= RESERVED_REGS2_DATA;
+        regs_rbit(MR_PARAM_REGS_HI  downto MR_PARAM_REGS_LO ) <= MR_PARAM_REGS_DATA;
+        regs_rbit(MW_PARAM_REGS_HI  downto MW_PARAM_REGS_LO ) <= MW_PARAM_REGS_DATA;
+        regs_rbit(RESERVED_REGS_HI  downto RESERVED_REGS_LO ) <= RESERVED_REGS_DATA;
     end block;
     -------------------------------------------------------------------------------
     -- Master Write Block
@@ -951,12 +974,12 @@ begin
         ---------------------------------------------------------------------------
         regs_rbit(MW_CTRL_RESV_POS) <= '0';
         ---------------------------------------------------------------------------
-        -- buf_rdata
+        -- buf_rdata (BUF_WIDTH=WORD_BITS)
         ---------------------------------------------------------------------------
         DATA: block
             constant  WORD_BYTES  :  integer := WORD_BITS/8;
             constant  WORDS       :  integer := BUF_WIDTH/WORD_BITS;
-            constant  WORD_LO     :  std_logic_vector(CALC_BITS(BUF_WIDTH/8)-1 downto 0)
+            constant  WORD_LO     :  std_logic_vector(CALC_BITS(WORDS)-1 downto 0)
                                   := (others => '0');
             constant  WORD_HI     :  std_logic_vector(WORD_BITS-1 downto WORD_LO'high+1)
                                   := (others => '0');
@@ -975,7 +998,7 @@ begin
                         buf_rdata <= (others => '0');
                     else
                         if (pull_buf_valid = '1') then
-                            next_word := curr_word + unsigned(pull_buf_size);
+                            next_word := curr_word + (unsigned(pull_buf_size)/WORD_BYTES);
                         else
                             next_word := curr_word;
                         end if;
@@ -984,11 +1007,15 @@ begin
                         else
                             curr_word <= (others => '0');
                         end if;
-                        for i in 0 to WORDS-1 loop
-                            word_data(WORD_LO'range) := to_unsigned(i*WORD_BYTES,WORD_LO'length);
-                            word_data(WORD_HI'range) := next_word(WORD_HI'range);
-                            buf_rdata((i+1)*WORD_BITS-1 downto i*WORD_BITS) <= std_logic_vector(word_data);
-                        end loop;
+                        if (WORDS > 1) then
+                            for i in 0 to WORDS-1 loop
+                                word_data(WORD_LO'range) := to_unsigned(i,WORD_LO'length);
+                                word_data(WORD_HI'range) := next_word(WORD_HI'range);
+                                buf_rdata((i+1)*WORD_BITS-1 downto i*WORD_BITS) <= std_logic_vector(word_data);
+                            end loop;
+                        else
+                            buf_rdata <= std_logic_vector(next_word);
+                        end if;
                     end if;
                 end if;
             end process;

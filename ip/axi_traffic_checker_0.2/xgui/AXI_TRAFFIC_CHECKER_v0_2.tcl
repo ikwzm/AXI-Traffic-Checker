@@ -36,8 +36,6 @@ proc init_gui { IPINST } {
   ipgui::add_param $IPINST -name "MW_RESP_REGS" -parent ${Master_Write_Configuration}
   ipgui::add_param $IPINST -name "MW_DATA_PIPELINE" -parent ${Master_Write_Configuration}
 
-
-
 }
 
 proc update_PARAM_VALUE.BUILD_VERSION { PARAM_VALUE.BUILD_VERSION } {

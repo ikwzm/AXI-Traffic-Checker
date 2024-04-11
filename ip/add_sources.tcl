@@ -34,4 +34,4 @@ add_vhdl_file sources_1 PIPEWORK ../PipeWork/src/components/register_access_adap
 add_vhdl_file sources_1 PIPEWORK ../PipeWork/src/pump/pump_controller_intake_side.vhd
 add_vhdl_file sources_1 PIPEWORK ../PipeWork/src/pump/pump_controller_outlet_side.vhd
 add_vhdl_file sources_1 PIPEWORK ../PipeWork/src/components/queue_arbiter_one_hot_arch.vhd
-add_vhdl_file sources_1 ZYNQMP_AXI_TRAFFIC_CHECKER_LIBRARY ./src/main/vhdl/axi_traffic_checker.vhd
+add_vhdl_file sources_1 AXI_TRAFFIC_CHECKER_LIBRARY ./src/main/vhdl/axi_traffic_checker.vhd

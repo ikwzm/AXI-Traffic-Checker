@@ -10,7 +10,7 @@
     Use      :  ["QUEUE_ARBITER(ONE_HOT_ARCH)"]
 
 - Library:
-    Name     :  zynqmp_axi_traffic_checker_library
+    Name     :  axi_traffic_checker_library
     Format   :  "add_vhdl_file sources_1 #{library_name} #{file_name}"
     PathList :  
         - "./src/main/vhdl/"

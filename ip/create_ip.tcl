@@ -3,7 +3,7 @@
 #
 set project_name            "axi_traffic_checker"
 set ip_name                 "AXI_TRAFFIC_CHECKER"
-set ip_version              "0.3"
+set ip_version              "0.4"
 set ip_core_revision        1
 set ip_vendor_name          "ikwzm"
 set ip_library_name         "PIPEWORK"

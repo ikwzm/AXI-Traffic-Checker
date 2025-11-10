@@ -6,7 +6,7 @@ set project_directory       [file dirname [info script]]
 set project_name            "axi_traffic_checker"
 set device_parts            "xc7z010clg400-1"
 set test_bench              "AXI_TRAFFIC_CHECKER_TEST_BENCH_64_64"
-set scenario_path           [file join ".." ".." "src" "test" "scenarios" ]
+set scenario_path           [file join $project_directory ".." ".." "src" "test" "scenarios" ]
 set scenario_file           [file join $scenario_path "test_64_64.snr" ]
 #
 # Create project
@@ -87,12 +87,10 @@ set_property "top" "AXI4_MASTER_TO_STREAM" $obj
 # Set 'sim_1' fileset properties
 #
 set current_vivado_version [version -short]
-if       { [string first "2019.2" $current_vivado_version ] == 0 } {
-    set scenario_full_path [file join ".." ".." ".." ".." $scenario_file ]
-} elseif { [string first "2018.3" $current_vivado_version ] == 0 } {
+if       { [string first "2025.1" $current_vivado_version ] == 0 } {
     set scenario_full_path [file join ".." ".." ".."      $scenario_file ]
-} elseif { [string first "2017"   $current_vivado_version ] == 0 } {
-    set scenario_full_path [file join ".." ".." ".." ".." $scenario_file ]
+} elseif { [string first "2019.2" $current_vivado_version ] == 0 } {
+    set scenario_full_path [file join ".." ".." ".."      $scenario_file ]
 } else {
    puts ""
    puts "ERROR: This model can not run in Vivado <$current_vivado_version>"

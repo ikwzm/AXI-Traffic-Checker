@@ -1,9 +1,6 @@
-
-- Global:
-    Print    :  true
-
 - Library:
     Name     :  pipework
+    Print    :  true
     Format   :  "add_vhdl_file sources_1 #{library_name} #{file_name}"
     PathList :  ["../PipeWork/src/"]
     Use      :  ["SDPRAM(XILINX_ULTRASCALE_AUTO_SELECT)"]
@@ -11,6 +8,7 @@
 
 - Library:
     Name     :  axi_traffic_checker_library
+    Print    :  true
     Format   :  "add_vhdl_file sources_1 #{library_name} #{file_name}"
     PathList :  
         - "./src/main/vhdl/"

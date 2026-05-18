@@ -1,12 +1,12 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_traffic_checker.vhd
 --!     @brief   AXI Traffic Checker Module
---!     @version 0.6.0
---!     @date    2025/11/17
+--!     @version 0.7.0
+--!     @date    2026/5/18
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
---      Copyright (C) 2024-2025 Ichiro Kawazome
+--      Copyright (C) 2024-2026 Ichiro Kawazome
 --      All rights reserved.
 --
 --      Redistribution and use in source and binary forms, with or without
@@ -249,7 +249,7 @@ architecture RTL of AXI_TRAFFIC_CHECKER is
     constant  VERSION_REGS_LO       :  integer := 8*VERSION_REGS_ADDR;
     constant  VERSION_REGS_HI       :  integer := 8*VERSION_REGS_ADDR + VERSION_REGS_BITS- 1;
     constant  VERSION_MAJOR         :  integer range 0 to 15 := 0;
-    constant  VERSION_MINOR         :  integer range 0 to 15 := 6;
+    constant  VERSION_MINOR         :  integer range 0 to 15 := 7;
     constant  VERSION_REGS_DATA     :  std_logic_vector(VERSION_REGS_BITS-1 downto 0)
                                     := std_logic_vector(to_unsigned(VERSION_MAJOR          , 4)) &
                                        std_logic_vector(to_unsigned(VERSION_MINOR          , 4)) &

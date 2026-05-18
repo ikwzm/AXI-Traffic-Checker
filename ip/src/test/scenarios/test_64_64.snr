@@ -6,9 +6,9 @@
   - SAY : AXI_TC_TEST.0.1 CHECK CONFIG
 - CSR :
   - READ : {ADDR: 32'h00000000, DATA: 32'h00000000} ## VERSION_REGS[31:00]=0x00000000
-  - READ : {ADDR: 32'h00000004, DATA: 32'h06010006} ## VERSION_REGS[35:32]=7(2**6=64)
+  - READ : {ADDR: 32'h00000004, DATA: 32'h07010006} ## VERSION_REGS[35:32]=7(2**6=64)
 						    ## VERSION_REGS[55:48]=1
-                                                    ## VERSION_REGS[59:56]=0
+                                                    ## VERSION_REGS[59:56]=7
                                                     ## VERSION_REGS[63:60]=0
 ---
 - MARCHAL : 
